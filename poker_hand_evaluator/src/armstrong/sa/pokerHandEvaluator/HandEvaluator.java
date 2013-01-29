@@ -74,13 +74,9 @@ public class HandEvaluator {
 					Evaluation eval = new Evaluation(HandRank.FOUR_OF_A_KIND);
 					List<Card> rankedCards = cardsGroupedByRank.get(rac.rank());
 					System.out.println("  Using rankedCards: " + rankedCards);
-					eval.setRankedCards(rankedCards);
-					// TODO determine kickers and unused cards.					
-										
+					eval.setRankedCards(rankedCards);										
 					possibleEvaluations.put(HandRank.FOUR_OF_A_KIND, eval);
-				} // if not empty, there's already a higher set of four cards on here.
-				// TODO put highest suit as kicker if kicker isn't higher.
-				
+				} // if not empty, there's already a higher set of four cards on here.				
 				break;
 			case 3:
 				if (possibleEvaluations.isEmpty()) {
@@ -89,10 +85,16 @@ public class HandEvaluator {
 					List<Card> rankedCards = cardsGroupedByRank.get(rac.rank());
 					System.out.println("  Using rankedCards: " + rankedCards);
 					eval.setRankedCards(rankedCards);
-					// TODO determine kickers and unused cards.
 					possibleEvaluations.put(HandRank.THREE_OF_A_KIND, eval);
 				} else {
-					// if not empty, there's already a higher hand on here.	
+					// if not empty, there may be three of a kind on here which means full house.
+					if (possibleEvaluations.containsKey(HandRank.THREE_OF_A_KIND) &&
+							!possibleEvaluations.containsKey(HandRank.FULL_HOUSE)) {
+						System.out.println("  Found 3 of a kind. Possible Evals already has THREE_OF_A_KIND. Creating " 
+							+ HandRank.FULL_HOUSE);						
+						Evaluation eval = helpCreateEvaluation(HandRank.FULL_HOUSE, HandRank.THREE_OF_A_KIND, rac.rank());
+						possibleEvaluations.put(HandRank.FULL_HOUSE, eval);
+					}
 				}
 				break;
 			case 2:
@@ -102,7 +104,6 @@ public class HandEvaluator {
 					List<Card> rankedCards = cardsGroupedByRank.get(rac.rank());
 					System.out.println("  Using rankedCards: " + rankedCards);
 					eval.setRankedCards(rankedCards);
-					// TODO determine kickers and unused cards.
 					possibleEvaluations.put(HandRank.PAIR, eval);
 				} else {
 					// if not empty, there may be three of a kind on here which means full house
@@ -111,9 +112,7 @@ public class HandEvaluator {
 							!possibleEvaluations.containsKey(HandRank.FULL_HOUSE)) {
 						System.out.println("  Found pair. Possible Evals already has THREE_OF_A_KIND. Creating " 
 							+ HandRank.FULL_HOUSE);						
-						Evaluation eval = helpCreateEvaluation(HandRank.FULL_HOUSE, rac.rank(), HandRank.THREE_OF_A_KIND);
-						// No kickers.
-						// TODO Put on unused cards.
+						Evaluation eval = helpCreateEvaluation(HandRank.FULL_HOUSE, HandRank.THREE_OF_A_KIND, rac.rank());
 						possibleEvaluations.put(HandRank.FULL_HOUSE, eval);
 					} else if (possibleEvaluations.containsKey(HandRank.PAIR) &&
 							!possibleEvaluations.containsKey(HandRank.TWO_PAIRS)) {
@@ -121,9 +120,7 @@ public class HandEvaluator {
 						// or there may be another pair which means two pairs.
 						System.out.println("  Found pair. Possible Evals already has PAIR. Creating " 
 							+ HandRank.TWO_PAIRS);												
-						Evaluation eval = helpCreateEvaluation(HandRank.TWO_PAIRS, rac.rank(), HandRank.PAIR);
-						// TODO Get the kicker.
-						// TODO Put on unused cards.
+						Evaluation eval = helpCreateEvaluation(HandRank.TWO_PAIRS, HandRank.PAIR, rac.rank());
 						possibleEvaluations.put(HandRank.TWO_PAIRS, eval);
 					}
 				}
@@ -135,7 +132,6 @@ public class HandEvaluator {
 					List<Card> rankedCards = cardsGroupedByRank.get(rac.rank());
 					System.out.println("  Using rankedCards: " + rankedCards);
 					eval.setRankedCards(rankedCards);
-					// TODO determine kickers and unused cards.
 					possibleEvaluations.put(HandRank.HIGH_CARD, eval);
 				} else {
 					// if not empty, there's already a higher hand on here.	
@@ -178,19 +174,32 @@ public class HandEvaluator {
 	}
 	
 	// handRank: Create a new evaluation with hand rank handRank.  
-	// rank: Find the cards having a rank (ACE, KING, etc) matching the rank passed in. 
-	// handRankOfOtherCards: Find the ranked cards in the evaluation that has a hand rank
+	// handRankOfHigherCards: Find the ranked cards in the evaluation that has a hand rank
 	// (e.g. THREE_OF_A_KIND or PAIR) matching the handRankOfOtherCards passed in.
+	// rank: Find the cards having a rank (ACE, KING, etc) matching the rank passed in.
+	//   If the rank has three cards, and we already have 3 of a kind, only use the
+	//   first two cards to create the full house.
 	// Add both partial sets of ranked cards to this evaluation's ranked cards.
-	private static Evaluation helpCreateEvaluation(HandRank handRank, Rank rank,
-			HandRank handRankOfOtherCards) {
+	private static Evaluation helpCreateEvaluation(HandRank handRank,
+			HandRank handRankOfHigherCards, Rank rank) {
 		Evaluation eval = new Evaluation(handRank);
 		// Find the ranked cards we already have.
-		Evaluation evalOfOtherCards = possibleEvaluations.get(handRankOfOtherCards);
-		List<Card> rankedCards = evalOfOtherCards.getRankedCards(); 
-		System.out.println("  Start with higher ranked cards " + handRankOfOtherCards + ": " + rankedCards);
-		// Add the cards having the rank passed in.
-		List<Card> rankedCardsToAdd = cardsGroupedByRank.get(rank);
+		Evaluation evalOfHigherCards = possibleEvaluations.get(handRankOfHigherCards);
+		List<Card> rankedCards = evalOfHigherCards.getRankedCards(); 
+		System.out.println("  Start with higher ranked cards " + handRankOfHigherCards + ": " + rankedCards);
+		// Get the cards having the rank passed in, in order to add them.
+		List<Card> additionalRankedCards = cardsGroupedByRank.get(rank);
+		List<Card> rankedCardsToAdd = new ArrayList<Card>();
+		// In cases where a full house is formed from two sets of three, 
+		// only add two out of the three additional ranked cards.
+		if (handRankOfHigherCards == handRank.THREE_OF_A_KIND && additionalRankedCards.size() == 3) {
+			Collections.sort(additionalRankedCards);
+//			Iterator workingIter = workingRankedCardsToAdd.iterator();
+			rankedCardsToAdd.add(additionalRankedCards.get(0));
+			rankedCardsToAdd.add(additionalRankedCards.get(1));
+		} else {
+			rankedCardsToAdd = additionalRankedCards;
+		}
 		System.out.println("  Add lesser ranked cards: " + rankedCardsToAdd);
 		// Put the lists together.
 		rankedCards.addAll(rankedCardsToAdd);

@@ -49,7 +49,7 @@ public class HandEvaluationTest {
 	}
 	
 	@Test
-	public void evaluateHandsStraightFlush() {
+	public void evaluateHandStraightFlush() {
 		System.out.println("TEST: " + getCurrentMethodName());
 		ArrayList<Card> cards = new ArrayList<Card>(asList(
 				new Card (Rank.ACE, Suit.SPADES), 
@@ -85,7 +85,7 @@ public class HandEvaluationTest {
 	}
 	
 	@Test
-	public void evaluateHandsFourOfAKind() {
+	public void evaluateHandFourOfAKind() {
 		System.out.println("TEST: " + getCurrentMethodName());
 		ArrayList<Card> cards = new ArrayList<Card>(asList(
 				new Card (Rank.ACE, Suit.SPADES), 
@@ -126,7 +126,64 @@ public class HandEvaluationTest {
 	}
 	
 	@Test
-	public void evaluateHandsFullHouse() {
+	public void evaluateHugeHandFourOfAKind() {
+		System.out.println("TEST: " + getCurrentMethodName());
+		ArrayList<Card> cards = new ArrayList<Card>(asList(
+				new Card (Rank.JACK, Suit.SPADES), 
+				new Card (Rank.JACK, Suit.DIAMONDS), 
+				new Card (Rank.JACK, Suit.CLUBS), 
+				new Card (Rank.KING, Suit.SPADES), 
+				new Card (Rank.KING, Suit.DIAMONDS),
+				new Card (Rank.KING, Suit.CLUBS), 
+				new Card (Rank.KING, Suit.HEARTS), 
+				new Card (Rank.TEN, Suit.HEARTS), 
+				new Card (Rank.QUEEN, Suit.SPADES), 
+				new Card (Rank.QUEEN, Suit.DIAMONDS),
+				new Card (Rank.QUEEN, Suit.CLUBS), 
+				new Card (Rank.QUEEN, Suit.HEARTS), 
+				new Card (Rank.SIX, Suit.SPADES), 
+				new Card (Rank.SIX, Suit.DIAMONDS),
+				new Card (Rank.SIX, Suit.CLUBS)
+				));
+		
+		Hand hand = new Hand (cards);
+		Evaluation evaluation = HandEvaluator.evaluateHand(hand);
+		
+		ArrayList<Card> expectedRankedCards = new ArrayList<Card>(asList(
+				new Card (Rank.KING, Suit.DIAMONDS), 
+				new Card (Rank.KING, Suit.CLUBS), 
+				new Card (Rank.KING, Suit.HEARTS), 
+				new Card (Rank.KING, Suit.SPADES)
+				));
+		//TO DO: Figure out how to allow for any of the aces to be kicker.
+		// 		 For now just use the "highest" ordinal Suit enum.  
+		ArrayList<Card> expectedKickerCards = new ArrayList<Card>(asList(
+				new Card (Rank.QUEEN, Suit.SPADES) 
+				));
+		ArrayList<Card> expectedUnusedCards = new ArrayList<Card>(asList(
+				new Card (Rank.JACK, Suit.SPADES), 
+				new Card (Rank.JACK, Suit.DIAMONDS), 
+				new Card (Rank.JACK, Suit.CLUBS), 
+				new Card (Rank.TEN, Suit.HEARTS), 
+				new Card (Rank.QUEEN, Suit.DIAMONDS),
+				new Card (Rank.QUEEN, Suit.CLUBS), 
+				new Card (Rank.QUEEN, Suit.HEARTS), 
+				new Card (Rank.SIX, Suit.SPADES), 
+				new Card (Rank.SIX, Suit.DIAMONDS),
+				new Card (Rank.SIX, Suit.CLUBS)
+				));
+		
+		//Hamcrest tests
+		assertThat(evaluation.getHandRank(), equalTo(HandRank.FOUR_OF_A_KIND));
+		assertThat(evaluation.getRankedCards(), matchesCards(expectedRankedCards));
+		//TO DO: Figure out how to allow for any of the aces to be kicker.
+		// 		 For now just use the "highest" ordinal Suit enum.  
+		assertThat(evaluation.getKickerCards(), matchesCards(expectedKickerCards));
+		assertThat(evaluation.getUnusedCards(), matchesCards(expectedUnusedCards));
+	}
+	
+	@Test
+	public void evaluateHandFullHouse() {
 		System.out.println("TEST: " + getCurrentMethodName());
 		
 		ArrayList<Card> cards = new ArrayList<Card>(asList(
@@ -165,7 +222,50 @@ public class HandEvaluationTest {
 	}
 	
 	@Test
-	public void evaluateHandsFlush() {
+	public void evaluateHugeHandFullHouse() {
+		System.out.println("TEST: " + getCurrentMethodName());
+		
+		ArrayList<Card> cards = new ArrayList<Card>(asList(
+				new Card (Rank.ACE, Suit.SPADES), 
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.KING, Suit.SPADES), 
+				new Card (Rank.KING, Suit.DIAMONDS),
+				new Card (Rank.KING, Suit.CLUBS), 
+				new Card (Rank.QUEEN, Suit.HEARTS), 
+				new Card (Rank.TWO, Suit.HEARTS),  
+				new Card (Rank.TWO, Suit.SPADES),  
+				new Card (Rank.TWO, Suit.DIAMONDS)
+				));
+		
+		Evaluation evaluation = HandEvaluator.evaluateHand(new Hand(cards));
+		//Evaluation evaluation = testThreeOfAKindHand();
+
+		// Expected hand
+		ArrayList<Card> expectedRankedCards = new ArrayList<Card>(asList(
+				new Card (Rank.KING, Suit.CLUBS),
+				new Card (Rank.KING, Suit.SPADES),
+				new Card (Rank.KING, Suit.DIAMONDS),
+				new Card (Rank.TWO, Suit.HEARTS),
+				new Card (Rank.TWO, Suit.SPADES)
+				));
+		ArrayList<Card> expectedKickerCards = new ArrayList<Card>();
+		ArrayList<Card> expectedUnusedCards = new ArrayList<Card>(asList(
+				new Card (Rank.ACE, Suit.SPADES), 
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.QUEEN, Suit.HEARTS), 
+				new Card (Rank.TWO, Suit.DIAMONDS)
+				));
+		
+		//Hamcrest tests
+		assertThat(evaluation.getHandRank(), equalTo(HandRank.FULL_HOUSE));
+		assertThat(evaluation.getRankedCards(), matchesCards(expectedRankedCards));
+		assertThat(evaluation.getKickerCards(), matchesCards(expectedKickerCards));
+		assertThat(evaluation.getUnusedCards(), matchesCards(expectedUnusedCards));
+				
+	}
+	
+	@Test
+	public void evaluateHandFlush() {
 		System.out.println("TEST: " + getCurrentMethodName());
 		
 		ArrayList<Card> cards = new ArrayList<Card>(asList(
@@ -203,7 +303,7 @@ public class HandEvaluationTest {
 	}
 	
 	@Test
-	public void evaluateHandsStraight() {
+	public void evaluateHandStraight() {
 		System.out.println("TEST: " + getCurrentMethodName());
 		ArrayList<Card> cards = new ArrayList<Card>(asList(
 				new Card (Rank.ACE, Suit.SPADES), 
@@ -239,7 +339,7 @@ public class HandEvaluationTest {
 	}
 	
 	@Test
-	public void evaluateHandsThreeOfAKind() {
+	public void evaluateHandThreeOfAKind() {
 		System.out.println("TEST: " + getCurrentMethodName());
 		
 		ArrayList<Card> cards = new ArrayList<Card>(asList(
@@ -261,23 +361,69 @@ public class HandEvaluationTest {
 				new Card (Rank.KING, Suit.DIAMONDS)
 				));
 		ArrayList<Card> expectedKickerCards = new ArrayList<Card>(asList(
-				new Card (Rank.ACE, Suit.SPADES)
+				new Card (Rank.ACE, Suit.SPADES),
+				new Card (Rank.QUEEN, Suit.HEARTS)
 				));
 		ArrayList<Card> expectedUnusedCards = new ArrayList<Card>(asList(
-				new Card (Rank.JACK, Suit.DIAMONDS),
-				new Card (Rank.QUEEN, Suit.HEARTS)
+				new Card (Rank.JACK, Suit.DIAMONDS)
 				));
 		
 		//Hamcrest tests
 		assertThat(evaluation.getHandRank(), equalTo(HandRank.THREE_OF_A_KIND));
 		assertThat(evaluation.getRankedCards(), matchesCards(expectedRankedCards));
-//		assertThat(evaluation.getKickerCards(), matchesCards(expectedKickerCards));
-//		assertThat(evaluation.getUnusedCards(), matchesCards(expectedUnusedCards));
+		assertThat(evaluation.getKickerCards(), matchesCards(expectedKickerCards));
+		assertThat(evaluation.getUnusedCards(), matchesCards(expectedUnusedCards));
 				
 	}
 	
 	@Test
-	public void evaluateHandsTwoPairs() {
+	public void evaluateHugeHandThreeOfAKind() {
+		System.out.println("TEST: " + getCurrentMethodName());
+		
+		ArrayList<Card> cards = new ArrayList<Card>(asList(
+				new Card (Rank.ACE, Suit.SPADES), 
+				new Card (Rank.JACK, Suit.DIAMONDS),
+				new Card (Rank.KING, Suit.SPADES), 
+				new Card (Rank.KING, Suit.DIAMONDS),
+				new Card (Rank.KING, Suit.CLUBS), 
+				new Card (Rank.QUEEN, Suit.HEARTS),
+				new Card (Rank.NINE, Suit.SPADES), 
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.SIX, Suit.CLUBS), 
+				new Card (Rank.TWO, Suit.HEARTS)
+				));
+		
+		Evaluation evaluation = HandEvaluator.evaluateHand(new Hand(cards));
+		//Evaluation evaluation = testThreeOfAKindHand();
+
+		// Expected hand
+		ArrayList<Card> expectedRankedCards = new ArrayList<Card>(asList(
+				new Card (Rank.KING, Suit.CLUBS),
+				new Card (Rank.KING, Suit.SPADES),
+				new Card (Rank.KING, Suit.DIAMONDS)
+				));
+		ArrayList<Card> expectedKickerCards = new ArrayList<Card>(asList(
+				new Card (Rank.ACE, Suit.SPADES), 
+				new Card (Rank.QUEEN, Suit.HEARTS)
+				));
+		ArrayList<Card> expectedUnusedCards = new ArrayList<Card>(asList(
+				new Card (Rank.JACK, Suit.DIAMONDS),
+				new Card (Rank.NINE, Suit.SPADES), 
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.SIX, Suit.CLUBS), 
+				new Card (Rank.TWO, Suit.HEARTS)
+				));
+		
+		//Hamcrest tests
+		assertThat(evaluation.getHandRank(), equalTo(HandRank.THREE_OF_A_KIND));
+		assertThat(evaluation.getRankedCards(), matchesCards(expectedRankedCards));
+		assertThat(evaluation.getKickerCards(), matchesCards(expectedKickerCards));
+		assertThat(evaluation.getUnusedCards(), matchesCards(expectedUnusedCards));
+				
+	}
+	
+	@Test
+	public void evaluateHandTwoPairs() {
 		System.out.println("TEST: " + getCurrentMethodName());
 		
 		ArrayList<Card> cards = new ArrayList<Card>(asList(
@@ -317,7 +463,53 @@ public class HandEvaluationTest {
 	}
 	
 	@Test
-	public void evaluateHandsPair() {
+	public void evaluateHugeHandTwoPairs() {
+		System.out.println("TEST: " + getCurrentMethodName());
+		
+		ArrayList<Card> cards = new ArrayList<Card>(asList(
+				new Card (Rank.ACE, Suit.SPADES), 
+				new Card (Rank.JACK, Suit.DIAMONDS),
+				new Card (Rank.JACK, Suit.SPADES), 
+				new Card (Rank.KING, Suit.DIAMONDS),
+				new Card (Rank.KING, Suit.CLUBS), 
+				new Card (Rank.TWO, Suit.DIAMONDS),
+				new Card (Rank.TWO, Suit.HEARTS),
+				new Card (Rank.NINE, Suit.SPADES), 
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.SIX, Suit.CLUBS)
+				));
+		
+		Evaluation evaluation = HandEvaluator.evaluateHand(new Hand(cards));
+		//Evaluation evaluation = testThreeOfAKindHand();
+
+		// Expected hand
+		ArrayList<Card> expectedRankedCards = new ArrayList<Card>(asList(
+				new Card (Rank.KING, Suit.CLUBS),
+				new Card (Rank.JACK, Suit.SPADES),
+				new Card (Rank.JACK, Suit.DIAMONDS),
+				new Card (Rank.KING, Suit.DIAMONDS)
+				));
+		ArrayList<Card> expectedKickerCards = new ArrayList<Card>(asList(
+				new Card (Rank.ACE, Suit.SPADES)
+				));
+		ArrayList<Card> expectedUnusedCards = new ArrayList<Card>(asList(
+				new Card (Rank.TWO, Suit.DIAMONDS),
+				new Card (Rank.TWO, Suit.HEARTS),
+				new Card (Rank.NINE, Suit.SPADES), 
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.SIX, Suit.CLUBS)
+				));
+		
+		//Hamcrest tests
+		assertThat(evaluation.getHandRank(), equalTo(HandRank.TWO_PAIRS));
+		assertThat(evaluation.getRankedCards(), matchesCards(expectedRankedCards));
+		assertThat(evaluation.getKickerCards(), matchesCards(expectedKickerCards));
+		assertThat(evaluation.getUnusedCards(), matchesCards(expectedUnusedCards));
+				
+	}
+	
+	@Test
+	public void evaluateHandPair() {
 		System.out.println("TEST: " + getCurrentMethodName());
 		
 		ArrayList<Card> cards = new ArrayList<Card>(asList(
@@ -357,7 +549,53 @@ public class HandEvaluationTest {
 	}
 	
 	@Test
-	public void evaluateHandsHighCard() {
+	public void evaluateHugeHandPair() {
+		System.out.println("TEST: " + getCurrentMethodName());
+		
+		ArrayList<Card> cards = new ArrayList<Card>(asList(
+				new Card (Rank.ACE, Suit.SPADES), 
+				new Card (Rank.JACK, Suit.DIAMONDS),
+				new Card (Rank.JACK, Suit.SPADES), 
+				new Card (Rank.KING, Suit.DIAMONDS),
+				new Card (Rank.THREE, Suit.CLUBS), 
+				new Card (Rank.TWO, Suit.DIAMONDS),
+				new Card (Rank.QUEEN, Suit.HEARTS),
+				new Card (Rank.NINE, Suit.SPADES), 
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.SIX, Suit.CLUBS)
+				));
+		
+		Evaluation evaluation = HandEvaluator.evaluateHand(new Hand(cards));
+		//Evaluation evaluation = testThreeOfAKindHand();
+
+		// Expected hand
+		ArrayList<Card> expectedRankedCards = new ArrayList<Card>(asList(
+				new Card (Rank.JACK, Suit.SPADES),
+				new Card (Rank.JACK, Suit.DIAMONDS)
+				));
+		ArrayList<Card> expectedKickerCards = new ArrayList<Card>(asList(
+				new Card (Rank.ACE, Suit.SPADES),
+				new Card (Rank.KING, Suit.DIAMONDS),
+				new Card (Rank.QUEEN, Suit.HEARTS)
+				));
+		ArrayList<Card> expectedUnusedCards = new ArrayList<Card>(asList(
+				new Card (Rank.THREE, Suit.CLUBS),
+				new Card (Rank.TWO, Suit.DIAMONDS),
+				new Card (Rank.NINE, Suit.SPADES), 
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.SIX, Suit.CLUBS)
+				));
+		
+		//Hamcrest tests
+		assertThat(evaluation.getHandRank(), equalTo(HandRank.PAIR));
+		assertThat(evaluation.getRankedCards(), matchesCards(expectedRankedCards));
+		assertThat(evaluation.getKickerCards(), matchesCards(expectedKickerCards));
+		assertThat(evaluation.getUnusedCards(), matchesCards(expectedUnusedCards));
+				
+	}
+	
+	@Test
+	public void evaluateHandHighCard() {
 		System.out.println("TEST: " + getCurrentMethodName());
 		
 		ArrayList<Card> cards = new ArrayList<Card>(asList(
@@ -386,6 +624,52 @@ public class HandEvaluationTest {
 		ArrayList<Card> expectedUnusedCards = new ArrayList<Card>(asList(
 				new Card (Rank.THREE, Suit.SPADES),
 				new Card (Rank.TWO, Suit.DIAMONDS)
+				));
+		
+		//Hamcrest tests
+		assertThat(evaluation.getHandRank(), equalTo(HandRank.HIGH_CARD));
+		assertThat(evaluation.getRankedCards(), matchesCards(expectedRankedCards));
+		assertThat(evaluation.getKickerCards(), matchesCards(expectedKickerCards));
+		assertThat(evaluation.getUnusedCards(), matchesCards(expectedUnusedCards));
+				
+	}
+	
+	@Test
+	public void evaluateHugeHandHighCard() {
+		System.out.println("TEST: " + getCurrentMethodName());
+		
+		ArrayList<Card> cards = new ArrayList<Card>(asList(
+				new Card (Rank.THREE, Suit.SPADES), 
+				new Card (Rank.JACK, Suit.DIAMONDS),
+				new Card (Rank.SIX, Suit.SPADES), 
+				new Card (Rank.KING, Suit.DIAMONDS),
+				new Card (Rank.NINE, Suit.CLUBS), 
+				new Card (Rank.TWO, Suit.DIAMONDS),
+				new Card (Rank.QUEEN, Suit.HEARTS),
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.SEVEN, Suit.CLUBS),
+				new Card (Rank.FOUR, Suit.CLUBS)
+				));
+		
+		Evaluation evaluation = HandEvaluator.evaluateHand(new Hand(cards));
+		//Evaluation evaluation = testThreeOfAKindHand();
+
+		// Expected hand
+		ArrayList<Card> expectedRankedCards = new ArrayList<Card>(asList(
+				new Card (Rank.KING, Suit.DIAMONDS)
+				));
+		ArrayList<Card> expectedKickerCards = new ArrayList<Card>(asList(
+				new Card (Rank.QUEEN, Suit.HEARTS),
+				new Card (Rank.JACK, Suit.DIAMONDS),
+				new Card (Rank.EIGHT, Suit.DIAMONDS),
+				new Card (Rank.NINE, Suit.CLUBS)
+				));
+		ArrayList<Card> expectedUnusedCards = new ArrayList<Card>(asList(
+				new Card (Rank.THREE, Suit.SPADES),
+				new Card (Rank.TWO, Suit.DIAMONDS),
+				new Card (Rank.SEVEN, Suit.CLUBS),
+				new Card (Rank.SIX, Suit.SPADES),
+				new Card (Rank.FOUR, Suit.CLUBS)
 				));
 		
 		//Hamcrest tests
